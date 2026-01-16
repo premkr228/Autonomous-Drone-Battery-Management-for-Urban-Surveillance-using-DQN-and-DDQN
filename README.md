@@ -1,5 +1,67 @@
 # Autonomous-Drone-Battery-Management-for-Urban-Surveillance-using-DQN-and-DDQN
 
+## Scenario :
+A single autonomous surveillance drone is operating over a simulated urban area. The drone's primary mission is to collect surveillance data by observing points of interest. It has a limited battery and needs to return to one of several charging stations when low on power. The challenge is to manage battery life effectively while maximizing surveillance opportunities, which appear randomly and offer varying rewards. Atmospheric disturbances (wind, rain) also unpredictably affect the drone's energy consumption.<br>
+## Problem :
+Statement: Develop a Deep Reinforcement Learning agent using Deep Q-Networks (DQN) and Double Deep Q-Networks (DDQN) to optimize the battery usage of an autonomous surveillance drone. The agent must learn an optimal policy to maximize its "surveillance score" by strategically flying, hovering, or returning to a charging station, while adapting to dynamic battery depletion, varying surveillance opportunities (rewards), and random atmospheric disturbances that affect energy consumption.<br>
+## Key Concepts & State Representation:<br>
+● Drone Position: The drone operates on a 2D grid representing the urban area (e.g., a 10×10 grid). Each cell in the grid represents a specific location.<br>
+● Battery Level: A continuous value representing the percentage of battery remaining (e.g., 0% to 100%).<br>
+● Charging Stations: Fixed locations on the grid where the drone can recharge.<br>
+● Surveillance Opportunities (Points of Interest - POIs): These are temporary "hotspots" that appear randomly on the grid. Each POI has:<br>
+&emsp;○ A value (reward) for observing it.<br>
+&emsp;○ A lifespan (how many time steps it remains active before disappearing).<br>
+● Atmospheric Disturbance: A continuous value representing the current level of wind/turbulence (e.g., from 0.0 to 1.0, where 1.0 means high disturbance). This directly affects energy consumption.<br>
+## State Space for input to NN:<br>
+● Drone X-coordinate: (Discrete, e.g., 0-9)<br>
+● Drone Y-coordinate: (Discrete, e.g., 0-9)<br>
+● Current Battery Percentage: (Continuous, e.g., float 0.0 to 100.0)<br>
+● Current Atmospheric Disturbance: (Continuous, e.g., float 0.0 to 1.0)<br>
+● Information about Active POIs: (For simplicity, you can limit to just the single "nearest" or "highest value" POI, or use a fixed number of top POIs)<br>
+&emsp;○ Proximity to Nearest POI: (Continuous, e.g., Euclidean distance to closest active POI).<br>
+&emsp;○ Value of Nearest POI: (Continuous, e.g., reward value).<br>
+&emsp;○ Lifespan of Nearest POI: (Discrete, e.g., remaining timesteps).<br>
+## Action Space:<br>
+● Move North<br>
+● Move South<br>
+● Move East<br>
+● Move West<br>
+● Hover: Stay at the current location.<br>
+● Recharge: (Only if at a Charging Station). Stay at the station to recharge.<br>
+## Dynamics and Rewards:<br>
+● Battery Depletion:<br>
+&emsp;○ Moving: Costs Base_Move_Cost + (Atmospheric_Disturbance * Disturbance_Factor) per step.<br>
+&emsp;○ Hovering: Costs Base_Hover_Cost + (Atmospheric_Disturbance * Disturbance_Factor) per step.<br>
+&emsp;○ Recharging: Gain Recharge_Rate battery percentage per step.<br>
+&emsp;○ Penalty: Large negative reward (-100) if battery reaches 0% and not at a charging station (drone crashes).<br>
+● Surveillance Opportunities (POIs):<br>
+&emsp;○ Spawning: New POIs appear randomly on empty cells (e.g., 5% chance per timestep).<br>
+&emsp;○ Observation Reward: When the drone is at the exact location of an active POI, it collects the POI's value as a positive reward. The POI then disappears.<br>
+&emsp;○ Lifespan Decay: Active POIs decay their lifespan by 1 each timestep; they disappear when lifespan reaches 0.<br>
+● Atmospheric Disturbance: Changes randomly each time step (e.g., a small random walk, or jump to a new value with some probability). <br>
+● Rewards:<br>
+&emsp;○ Collecting POI value: +POI_Value.<br>
+&emsp;○ Successful recharge (per step at station): Small positive reward (+1) to incentivize charging behavior.<br>
+&emsp;○ Crash (battery 0% not at station): -100.<br>
+&emsp;○ General time penalty: Small negative reward (-0.1) per step (to encourage efficient operation).<br>
+## Objective:
+The agent must learn the optimal policy π∗ using DQN and Double DQN to maximize its cumulative surveillance score (total rewards collected) over many episodes (e.g., each episode is 200-500 time steps).<br>
+## Environment Setup (Custom Python Simulator):<br>
+● A DroneSurveillanceEnv class with __init__, step, and reset methods.<br>
+● The step method will handle:<br>
+&emsp;○ Action execution (movement, battery change).<br>
+&emsp;○ Battery depletion based on action and disturbance.<br>
+&emsp;○ POI spawning, lifespan decay, and collection.<br>
+&emsp;○ Atmospheric disturbance updates.<br>
+&emsp;○ Reward calculation.<br>
+&emsp;○ Episode termination conditions (battery crash, max timesteps).<br>
+● The reset method will:<br>
+&emsp;○ Place the drone at a starting location.<br>
+&emsp;○ Reset battery to full.<br>
+&emsp;○ Clear active POIs.<br>
+&emsp;○ Set initial atmospheric disturbance.<br>
+
+-------------------------------------------------------------------------------------------------------------------------------------------
 1. Project Overview and Motivation
 
 Urban surveillance using autonomous drones presents a practical challenge that goes beyond navigation alone. A drone must continuously balance its surveillance objectives with strict battery constraints while operating in a dynamic and uncertain environment. This project focuses on learning an intelligent battery management and navigation strategy for a surveillance drone operating over a city grid. The drone must decide where to move, when to hover, and when to recharge, while collecting valuable surveillance information from dynamically appearing points of interest (POIs). Reinforcement learning is used to allow the drone to learn these decisions through experience rather than relying on fixed, rule-based logic.
