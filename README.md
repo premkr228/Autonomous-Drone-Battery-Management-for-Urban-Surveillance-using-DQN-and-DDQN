@@ -1,0 +1,2 @@
+# -Autonomous-Drone-Battery-Management-for-Urban-Surveillance-using-DQN-and-DDQN
+Project was developed with the intent of balancing conceptual clarity, experimental rigor, and practical feasibility. Overall implementation demonstrates the effectiveness of Deep Reinforcement Learning techniques for autonomous drone battery management, several important considerations influence how the results should be interpreted and evaluated.
